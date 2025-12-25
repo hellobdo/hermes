@@ -1,42 +1,44 @@
+import asyncio
 import os
 
+import questionary
 from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.trading.client import TradingClient
 from alpaca.trading.stream import TradingStream
 from dotenv import load_dotenv
-from prompt_toolkit.shortcuts import prompt, radiolist_dialog
-from prompt_toolkit.validation import ValidationError, Validator
+from prompt_toolkit.shortcuts import prompt
 
 from .context import TradingContext
+from .info_methods import get_open_orders, get_open_positions
 from .order_entry import handle_order_entry
 
 
-class SideValidator(Validator):
-    def validate(self, document):
-        if document.text.split()[1].lower() not in ["buy", "sell"]:
-            raise ValidationError(message="Side must be buy or sell")
-
-
-async def update_handler(data):
+async def start_stream(api_key, secret_key, is_paper):
     # trade updates will arrive in our async handler
     trading_stream = TradingStream(api_key, secret_key, paper=is_paper)
+
+    async def update_handler(data):
+        print(data)
+
     trading_stream.subscribe_trade_updates(update_handler)
-    trading_stream.run()
-    print(data)
+    await trading_stream._run_forever()
 
 
 def main():
     load_dotenv()
 
-    is_paper = radiolist_dialog(
-        title="Trading Mode",
-        text="Select trading mode:",
-        values=[(True, "Paper"), (False, "Live")],
-    ).run()
+    is_paper = (
+        questionary.select("Select trading mode:", choices=["Paper", "Live"]).ask()
+        == "Paper"
+    )
 
-    risk_pct = float(prompt("Risk Percentage ", default="0.25")) / 100
+    risk_pct_input = prompt("Risk Percentage (default: 0.25%).\n> ")
+    risk_pct = float(risk_pct_input or "0.25") / 100
+    print(f"Risk Percentage for the session is {risk_pct}%")
 
-    risk_reward = float(prompt("Risk/Reward Ratio ", default="5"))
+    risk_reward_input = prompt("Risk/Reward Ratio. (default: 5).\n> ")
+    risk_reward = float(risk_reward_input or "5")
+    print(f"Risk Reward for the session is {risk_reward}")
 
     api_key = (
         os.environ["ALPACA_API_KEY_PAPER"]
@@ -52,24 +54,37 @@ def main():
     client = TradingClient(api_key, secret_key, paper=is_paper, raw_data=False)
     stock_data = StockHistoricalDataClient(api_key, secret_key)
 
+    account_value = float(client.get_account().last_equity or 0)
+    print(f"Account value for risk calculations today is {account_value}")
+
     ctx = TradingContext(
         client=client,
         stock_data=stock_data,
         risk_pct=risk_pct,
         is_paper=is_paper,
-        account_value=float(client.get_account().last_equity or 0),
+        account_value=account_value,
         risk_reward=risk_reward,
     )
 
-    while True:
-        order_input = prompt(
-            "Enter order (e.g., 'AAPL buy 143'): ", validator=SideValidator()
-        )
+    asyncio.create_task(start_stream(api_key, secret_key, is_paper))
+    
+    print(f"Creating session...\n Risk Percentage: {risk_pct} \n Risk Reward: {risk_reward} \n Account Value: {account_value}")
 
-        symbol, side, stop_loss = order_input.split()
-        stop_loss_price = float(stop_loss)
-        handle_order_entry(ctx, side, stop_loss_price, symbol)
+    while True:
+        input = prompt("> ")
+
+        if input == "orders":
+            print(get_open_orders(ctx))
+        elif input == "positions":
+            print(get_open_positions(ctx))
+        else:
+            symbol, side, stop_loss = input.split()
+            if side.lower() not in ["buy", "sell"]:
+                print("Side must be buy or sell")
+                continue
+            stop_loss_price = float(stop_loss)
+            handle_order_entry(ctx, side, stop_loss_price, symbol)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
