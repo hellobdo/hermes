@@ -24,6 +24,7 @@ async def main(ctx):
             * <cancel all orders> to cancel all open orders
             * <AAPL buy 123> to buy AAPL with stop loss 123
             * <AAPL sell 123> to short AAPL with stop loss 123
+            * <modify order> to modify an existing order
             * <exit> to leave
         """
     )

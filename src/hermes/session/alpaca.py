@@ -54,6 +54,9 @@ async def start_stream(is_paper: bool) -> None:
         print(f"\n📊 Order Update: {data.event.upper()}")
         print(f"   Symbol: {order.symbol} | Side: {order.side.value}")
         print(f"   Qty: {order.qty} | Status: {order.status.value}")
+        
+        if data.event == "fill":
+            print("Order filled! Use 'modify order' to adjust quantity")
 
         if order.filled_avg_price:
             print(f"   Filled Price: ${order.filled_avg_price}")
