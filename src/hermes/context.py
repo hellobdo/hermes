@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 
 from alpaca.data.historical import StockHistoricalDataClient
@@ -12,3 +13,4 @@ class TradingContext:
     is_paper: bool
     account_value: float
     risk_reward: float
+    stream_task: asyncio.Task[None]

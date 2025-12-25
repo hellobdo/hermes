@@ -1,4 +1,4 @@
-from .context import TradingContext
+from hermes.context import TradingContext
 
 
 def define_risk_amount(ctx: TradingContext) -> float:

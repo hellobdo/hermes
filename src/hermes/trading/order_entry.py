@@ -3,8 +3,8 @@ from alpaca.data.requests import StockLatestQuoteRequest
 from alpaca.trading.enums import OrderClass, OrderSide, OrderType, TimeInForce
 from alpaca.trading.requests import OrderRequest, StopLossRequest, TakeProfitRequest
 
-from .context import TradingContext
-from .risk_manager import define_risk_amount, define_take_profit_price
+from hermes.context import TradingContext
+from hermes.trading.risk_manager import define_risk_amount, define_take_profit_price
 
 
 def set_qty(entry_price: float, stop_loss_price: float, risk_amount: float):
@@ -77,7 +77,3 @@ def create_bracket_order(
         take_profit=TakeProfitRequest(limit_price=take_profit_price),
         stop_loss=StopLossRequest(stop_price=stop_loss_price),
     )
-
-
-def submit_order(ctx: TradingContext, order: OrderRequest) -> None:
-    ctx.client.submit_order(order)

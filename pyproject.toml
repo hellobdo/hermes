@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-hermes = "hermes.main:main"
+hermes = "hermes.main:cli"
 
 [tool.uv]
 package = true
