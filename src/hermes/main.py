@@ -24,18 +24,25 @@ async def start_stream(api_key, secret_key, is_paper):
     await trading_stream._run_forever()
 
 
-def main():
-    load_dotenv()
-
-    is_paper = (
+def get_trading_mode():
+    return (
         questionary.select("Select trading mode:", choices=["Paper", "Live"]).ask()
         == "Paper"
     )
 
+
+def get_risk_pct():
     risk_pct_input = prompt("Risk Percentage (default: 0.25%).\n> ")
     risk_pct = float(risk_pct_input or "0.25") / 100
-    print(f"Risk Percentage for the session is {risk_pct}%")
+    print(f"Risk Percentage for the session is {risk_pct * 100}%")
+    return risk_pct
 
+
+async def main():
+    load_dotenv()
+
+    is_paper = get_trading_mode()
+    risk_pct = get_risk_pct()
     risk_reward_input = prompt("Risk/Reward Ratio. (default: 5).\n> ")
     risk_reward = float(risk_reward_input or "5")
     print(f"Risk Reward for the session is {risk_reward}")
@@ -67,8 +74,10 @@ def main():
     )
 
     asyncio.create_task(start_stream(api_key, secret_key, is_paper))
-    
-    print(f"Creating session...\n Risk Percentage: {risk_pct} \n Risk Reward: {risk_reward} \n Account Value: {account_value}")
+
+    print(
+        f"Creating session...\n Risk Percentage: {risk_pct} \n Risk Reward: {risk_reward} \n Account Value: {account_value}"
+    )
 
     while True:
         input = prompt("> ")
