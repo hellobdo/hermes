@@ -25,7 +25,7 @@ async def update_handler(data):
     print(data)
 
 
-if __name__ == "__main__":
+def main():
     load_dotenv()
 
     is_paper = radiolist_dialog(
@@ -69,3 +69,7 @@ if __name__ == "__main__":
         symbol, side, stop_loss = order_input.split()
         stop_loss_price = float(stop_loss)
         handle_order_entry(ctx, side, stop_loss_price, symbol)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,5 @@
 .env
 __pycache__
-order_entry_cli.egg-info
+hermes.egg-info
 .venv
 .pytest_cache
