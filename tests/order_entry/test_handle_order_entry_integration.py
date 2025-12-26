@@ -3,7 +3,7 @@ from unittest.mock import Mock
 from alpaca.trading.enums import OrderSide, OrderType
 
 from hermes.context import TradingContext
-from hermes.trading.order_entry import handle_order_entry
+from hermes.trading.orders.main import handle_order_entry
 
 
 def test_handle_order_entry_buy():

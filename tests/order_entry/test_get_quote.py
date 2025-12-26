@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from hermes.trading.order_entry import get_quote
+from hermes.trading.orders.utils import get_quote
 
 
 def test_get_quote():

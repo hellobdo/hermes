@@ -1,4 +1,4 @@
-from hermes.trading.order_entry import validate_orders
+from hermes.trading.orders.utils import validate_orders
 import pytest
 
 def test_validate_buy_valid():
