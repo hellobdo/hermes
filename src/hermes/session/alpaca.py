@@ -1,7 +1,7 @@
-import csv
 import os
-from datetime import datetime
 from typing import Tuple
+from alpaca.trading.enums import PositionIntent
+from hermes.trading.order_entry import handle_exit_orders
 
 from alpaca.data.historical import OptionHistoricalDataClient, StockHistoricalDataClient
 from alpaca.trading.client import TradingClient
@@ -67,11 +67,21 @@ async def start_stream(ctx: TradingContext) -> None:
             print(f"   Stop Price: ${order.stop_price}")
 
         if data.event == "fill":
-            print("Order filled! Use 'modify order' to adjust quantity")
-            with open("order_fills.csv", "a", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow([datetime.now(), str(data.__dict__)])
             # ctx.duckdb.log_trades(data)
+            if order.position_intent in [PositionIntent.BUY_TO_OPEN, PositionIntent.SELL_TO_OPEN]:
+                pending = ctx.pending_orders[order.id]
+                print("Position opened! Submitting exit orders...")
+                handle_exit_orders(
+                    ctx,
+                    side=pending['side'],
+                    symbol=pending['symbol'],
+                    qty=pending['qty'],
+                    stop_loss_price=pending['stop_loss_price'],
+                    take_profit_price=pending['take_profit_price']
+                )
+                
+                del ctx.pending_orders[order.id]
+            
 
         if order.filled_avg_price:
             print(f"   Filled Price: ${order.filled_avg_price}")

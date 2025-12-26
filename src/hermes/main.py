@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 
 from prompt_toolkit.patch_stdout import patch_stdout
@@ -7,7 +8,7 @@ from prompt_toolkit.shortcuts import PromptSession
 from hermes.options.main import parsing_options
 from hermes.session.alpaca import start_stream
 from hermes.session.main import get_trading_context
-from hermes.trading.order_entry import handle_order_entry
+from hermes.trading.order_entry import get_latest_price, handle_order_entry
 
 
 async def main(ctx):
@@ -19,9 +20,10 @@ async def main(ctx):
     Methods:
         * <orders> lists all standing orders
         * <positions> lists all positions
-        * <AAPL buy 123> to buy AAPL with stop loss 123
-        * <AAPL sell 123> to short AAPL with stop loss 123
-        * <chain AAPL> to list option expiries and create an option order
+        * <SPY> to get the current ask price
+        * <SPY buy 123> to buy AAPL with stop loss 123
+        * <SPY sell 123> to short AAPL with stop loss 123
+        * <chain SPY> to list option expiries and create an option order
         * <help> to list available methods
         * <exit> to leave
     """
@@ -40,54 +42,76 @@ async def main(ctx):
 
         try:
             while True:
-                input = await session.prompt_async("> ")
+                try:
+                    input = await session.prompt_async("> ")
 
-                if input == "orders":
-                    orders = ctx.client.get_orders()
-                    print(f"{orders}") if orders else print("No standing orders")
-                elif input == "positions":
-                    positions = ctx.client.get_all_positions()
-                    print(f"{positions}") if positions else print(
-                        "No standing positions"
-                    )
-                elif input == "help":
-                    os.system("clear")
-                    print(f"{session_details}")
-                elif input == "exit":
-                    break
-                elif "chain" in input:
-                    option_symbol = await parsing_options(ctx, input)
+                    if input == "orders":
+                        orders = ctx.client.get_orders()
+                        if orders:
+                            for o in orders:
+                                print(
+                                    f"{o.symbol} | {o.side.value} | {o.qty} | Type: {o.type.value} | Status: {o.status.value} | GTC: {o.time_in_force}"
+                                )
+                        else:
+                            print("No standing orders")
+                    elif input == "positions":
+                        positions = ctx.client.get_all_positions()
+                        if positions:
+                            for p in positions:
+                                print(
+                                    f"{p.symbol} | {p.qty} @ {p.avg_entry_price} | Market Value: {float(p.market_value):,.2f}"
+                                )
+                        else:
+                            print("No standing positions")
+                    elif input == "help":
+                        os.system("clear")
+                        print(f"{session_details}")
+                    elif input == "exit":
+                        print("Exiting...")
+                        break
+                    elif "chain" in input:
+                        option_symbol = await parsing_options(ctx, input)
 
-                    if option_symbol:
-                        stop_input = await session.prompt_async("Stop price: ")
-                        stop_price = float(stop_input)
+                        if option_symbol:
+                            stop_input = await session.prompt_async("Stop price: ")
+                            stop_price = float(stop_input)
 
-                        print(
-                            f"\nSubmitting order for {option_symbol} and stop price {stop_price}"
-                        )
-                        handle_order_entry(
-                            ctx,
-                            side="buy",
-                            stop_loss_price=stop_price,
-                            symbol=option_symbol,
-                            is_options=True,
-                        )
+                            print(
+                                f"\nSubmitting order for {option_symbol} and stop price {stop_price}"
+                            )
+                            handle_order_entry(
+                                ctx,
+                                side="buy",
+                                stop_loss_price=stop_price,
+                                symbol=option_symbol,
+                                is_options=True,
+                            )
+                        else:
+                            print("No option symbol found")
+
+                    elif len(input.split()) == 1:
+                        try:
+                            symbol = input.upper()
+                            entry_price = get_latest_price(ctx, symbol, side="buy")
+                            print(f"Entry price is {entry_price}")
+                        except Exception as e:
+                            error_data = json.loads(str(e))
+                            print(f"Error submitting order: {error_data['message']}")
                     else:
-                        print("No option symbol found")
-
-                else:
-                    symbol, side, stop_loss = input.split()
-                    symbol = symbol.upper()
-                    if side.lower() not in ["buy", "sell"]:
-                        print("Side must be buy or sell")
-                        continue
-                    stop_loss_price = float(stop_loss)
-                    handle_order_entry(
-                        ctx, side, stop_loss_price, symbol, is_options=False
-                    )
+                        symbol, side, stop_loss = input.split()
+                        symbol = symbol.upper()
+                        if side.lower() not in ["buy", "sell"]:
+                            print("Side must be buy or sell")
+                            continue
+                        stop_loss_price = float(stop_loss)
+                        handle_order_entry(
+                            ctx, side, stop_loss_price, symbol, is_options=False
+                        )
+                except Exception as e:
+                    print(f"Error: {e}")
+                    continue
         finally:
             background_task.cancel()
-            print("Exiting...")
 
 
 def cli():

@@ -21,7 +21,7 @@ def define_take_profit_price(
     else:
         take_profit_price = entry_price - price_delta * risk_reward
 
-    return take_profit_price
+    return round(take_profit_price, 2)
 
 
 def define_price_delta(entry_price: float, stop_loss_price: float) -> float:

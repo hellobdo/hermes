@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Dict
 
 from alpaca.data.historical import OptionHistoricalDataClient, StockHistoricalDataClient
 from alpaca.trading.client import TradingClient
@@ -18,3 +19,4 @@ class TradingContext:
     account_currency: str
     risk_reward: float
     risk_amount: float
+    pending_orders: Dict = field(default_factory=dict)
