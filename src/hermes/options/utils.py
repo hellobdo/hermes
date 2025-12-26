@@ -20,21 +20,21 @@ def get_closest_strike(strikes: List[float], underlying_price: float) -> float:
     return min(strikes, key=lambda x: abs(x - underlying_price))
 
 
-def get_strike(ctx, underlying_symbol, strikes: List[float]) -> float:
+async def get_strike(ctx, underlying_symbol, strikes: List[float]) -> float:
     underlying_price = get_latest_price(ctx, underlying_symbol, side="buy")
     closest_strike = get_closest_strike(strikes, underlying_price)
 
-    return questionary.select(
+    return await questionary.select(
         "Strike:", choices=[str(s) for s in strikes], default=str(closest_strike)
-    ).ask()
+    ).ask_async()
 
 
-def get_option_type() -> str:
-    return questionary.select("Expiration:", choices=["Call", "Put"]).ask()
+async def get_option_type() -> str:
+    return await questionary.select("Expiration:", choices=["Call", "Put"]).ask_async()
 
 
-def get_selected_date(dates: List) -> str:
-    return questionary.select("Expiration:", choices=dates).ask()
+async def get_selected_date(dates: List) -> str:
+    return await questionary.select("Expiration:", choices=dates).ask_async()
 
 
 def get_contract_type_enum(option_type) -> ContractType:

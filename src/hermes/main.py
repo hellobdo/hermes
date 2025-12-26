@@ -11,19 +11,25 @@ from hermes.trading.order_entry import handle_order_entry
 async def main(ctx):
     asyncio.create_task(start_stream(ctx.is_paper))
 
+    session_details = f"""
+    Trading Mode: {ctx.is_paper}
+    Risk Percentage: {ctx.risk_pct * 100}%
+    Risk Reward: {ctx.risk_reward}
+    Account Value: {ctx.account_value}
+    Methods:
+        * <orders> lists all standing orders
+        * <positions> lists all positions
+        * <AAPL buy 123> to buy AAPL with stop loss 123
+        * <AAPL sell 123> to short AAPL with stop loss 123
+        * <chain AAPL> to list option expiries and create an option order
+        * <help> to list available methods
+        * <exit> to leave
+    """
+
+    print("\033[2J\033[H", end="")  # Clear terminal
     print(
         f"""Creating session...
-        Trading Mode: {ctx.is_paper}
-        Risk Percentage: {ctx.risk_pct * 100}%
-        Risk Reward: {ctx.risk_reward}
-        Account Value: {ctx.account_value}
-        Methods:
-            * <orders> lists all standing orders
-            * <positions> lists all positions
-            * <AAPL buy 123> to buy AAPL with stop loss 123
-            * <AAPL sell 123> to short AAPL with stop loss 123
-            * <chain AAPL> to list option expiries and create an option order
-            * <exit> to leave
+            {session_details}
         """
     )
 
@@ -37,14 +43,18 @@ async def main(ctx):
         elif input == "positions":
             positions = ctx.client.get_all_positions()
             print(f"{positions}") if positions else print("No standing orders")
+        elif input == "help":
+            print(f"{session_details}")
         elif input == "exit":
+            print("Exiting...")
             break
         elif "chain" in input:
             try:
-                option_symbol = parsing_options(ctx, input)
+                option_symbol = await parsing_options(ctx, input)
 
                 if option_symbol:
-                    stop_price = float(input("Stop price: "))
+                    stop_input = await session.prompt_async("Stop price: ")
+                    stop_price = float(stop_input)
 
                     print(
                         f"\nSubmitting order for {option_symbol} and stop price {stop_price}"
