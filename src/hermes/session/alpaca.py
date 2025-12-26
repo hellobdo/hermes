@@ -1,7 +1,7 @@
 import os
 from typing import Tuple
 
-from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.historical import OptionHistoricalDataClient, StockHistoricalDataClient
 from alpaca.trading.client import TradingClient
 from alpaca.trading.stream import TradingStream
 from dotenv import load_dotenv
@@ -28,8 +28,9 @@ def get_alpaca_clients(is_paper: bool, raw_data: bool = False) -> Tuple:
     api_key, secret_key = _get_api_keys(is_paper)
     client = TradingClient(api_key, secret_key, paper=is_paper, raw_data=raw_data)
     stock_data = StockHistoricalDataClient(api_key, secret_key)
+    option_data = OptionHistoricalDataClient(api_key, secret_key)
 
-    return client, stock_data
+    return client, stock_data, option_data
 
 
 def get_account_value(client: TradingClient) -> float:

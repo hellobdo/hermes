@@ -26,10 +26,6 @@ def get_selected_date(dates: List) -> str:
     return questionary.select("Expiration:", choices=dates).ask()
 
 
-def get_stop_price() -> float:
-    return float(input("Stop price: "))
-
-
 def get_contract_type_enum(option_type) -> ContractType:
     return ContractType.CALL if option_type == "Call" else ContractType.PUT
 

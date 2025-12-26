@@ -5,7 +5,7 @@ from hermes.session.session import setup_session
 
 def get_trading_context() -> TradingContext:
     is_paper, risk_pct, risk_reward = setup_session()
-    client, stock_data = get_alpaca_clients(is_paper)
+    client, stock_data, option_data = get_alpaca_clients(is_paper)
     account_value = get_account_value(client)
 
     session_type = "Paper" if is_paper else "Live"
@@ -15,6 +15,7 @@ def get_trading_context() -> TradingContext:
     return TradingContext(
         client=client,
         stock_data=stock_data,
+        option_data=option_data,
         risk_pct=risk_pct,
         is_paper=is_paper,
         account_value=account_value,

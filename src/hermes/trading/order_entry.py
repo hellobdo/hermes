@@ -5,7 +5,6 @@ from alpaca.trading.requests import OrderRequest, StopLossRequest, TakeProfitReq
 
 from hermes.context import TradingContext
 from hermes.trading.risk_manager import (
-    define_risk_amount,
     define_take_profit_price,
     set_qty,
 )
@@ -46,7 +45,7 @@ def handle_order_entry(
         entry_price = get_latest_price(ctx, symbol, side)
         validate_orders(side, entry_price, stop_loss_price)
         side = get_side_object(side)
-        qty = set_qty(entry_price, stop_loss_price, ctx.risk_amount)
+        qty = set_qty(entry_price, stop_loss_price, ctx.risk_amount, symbol)
         take_profit_price = define_take_profit_price(
             ctx, entry_price, stop_loss_price, side
         )

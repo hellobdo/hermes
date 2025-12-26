@@ -1,8 +1,13 @@
 from hermes.context import TradingContext
 
 
-def set_qty(entry_price: float, stop_loss_price: float, risk_amount: float):
-    return round(risk_amount / abs(entry_price - stop_loss_price))
+def set_qty(
+    entry_price: float, stop_loss_price: float, risk_amount: float, symbol: str
+):
+    if len(symbol) >= 6:
+        return round((risk_amount / abs(entry_price - stop_loss_price)) / 100)
+    else:
+        return round(risk_amount / abs(entry_price - stop_loss_price))
 
 
 def define_take_profit_price(

@@ -2,8 +2,8 @@ import asyncio
 
 from prompt_toolkit.shortcuts import PromptSession
 
+from hermes.options.main import parsing_options
 from hermes.session.alpaca import start_stream
-from hermes.session.helpers import parsing_options
 from hermes.session.main import get_trading_context
 from hermes.trading.order_entry import handle_order_entry
 
@@ -40,15 +40,25 @@ async def main(ctx):
         elif input == "exit":
             break
         elif "chain" in input:
-            symbol, strike, option_type, stop_price, option_symbol = parsing_options(
-                ctx, input
-            )
+            try:
+                option_symbol = parsing_options(ctx, input)
 
-            print(f"\nSubmitting order for {symbol} Strike {strike} {option_type}")
+                if option_symbol:
+                    stop_price = float(input("Stop price: "))
 
-            handle_order_entry(
-                ctx, side="buy", stop_loss_price=stop_price, symbol=option_symbol
-            )
+                    print(
+                        f"\nSubmitting order for {option_symbol} and stop price {stop_price}"
+                    )
+                    handle_order_entry(
+                        ctx,
+                        side="buy",
+                        stop_loss_price=stop_price,
+                        symbol=option_symbol,
+                    )
+                else:
+                    print("No option symbol found")
+            except Exception as e:
+                print(f"Error submitting order: {e}")
 
         else:
             symbol, side, stop_loss = input.split()

@@ -1,5 +1,3 @@
-from typing import Tuple, Union
-
 from hermes.context import TradingContext
 from hermes.options.utils import (
     generate_option_request,
@@ -7,13 +5,12 @@ from hermes.options.utils import (
     get_option_contract_request,
     get_option_type,
     get_selected_date,
-    get_stop_price,
     get_strike,
     get_symbol_from_input,
 )
 
 
-def parsing_options(ctx: TradingContext, input: str) -> Union[Tuple, None]:
+def parsing_options(ctx: TradingContext, input: str) -> str | None:
     symbol = get_symbol_from_input(input)
     request = get_option_contract_request(symbol)
     response = ctx.client.get_option_contracts(request)
@@ -42,15 +39,13 @@ def parsing_options(ctx: TradingContext, input: str) -> Union[Tuple, None]:
         option_symbol = final_contract.symbol
 
         quote_request = generate_option_request(option_symbol)
-        quote = ctx.client.get_option_latest_quote(quote_request)
+        quote = ctx.option_data.get_option_latest_quote(quote_request)
         ask_price = quote[option_symbol].ask_price
-
         print(f"Current ask: ${ask_price}")
-        stop_price = get_stop_price()
 
-        print(f"Option Symbol is: {option_symbol} and stop price is {stop_price}")
+        print(f"Option Symbol is: {option_symbol}")
 
-        return option_symbol, stop_price
+        return option_symbol
 
     else:
         print("No option contracts found for that ticker.")
