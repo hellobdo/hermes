@@ -1,7 +1,6 @@
 from alpaca.trading.enums import OrderClass, OrderSide, OrderType, TimeInForce
 from alpaca.trading.requests import (
     LimitOrderRequest,
-    MarketOrderRequest,
     StopLossRequest,
     StopOrderRequest,
     TakeProfitRequest,
@@ -12,15 +11,17 @@ def create_entry_order(
     symbol: str,
     qty: int,
     side: OrderSide,
-    is_option: bool = False,
-) -> MarketOrderRequest:
-    time_in_force = TimeInForce.GTC if not is_option else TimeInForce.DAY
+    limit_price: float,
+    is_options: bool,
+) -> LimitOrderRequest:
+    time_in_force = TimeInForce.GTC if not is_options else TimeInForce.DAY
 
-    return MarketOrderRequest(
+    return LimitOrderRequest(
         symbol=symbol,
         qty=qty,
         side=side,
         time_in_force=time_in_force,
+        limit_price=limit_price,
     )
 
 
@@ -48,13 +49,14 @@ def create_limit_order(
     qty: int,
     side: OrderSide,
     take_profit_price: float,
+    time_in_force: TimeInForce=TimeInForce.GTC
 ) -> LimitOrderRequest:
     return LimitOrderRequest(
         symbol=symbol,
         qty=qty,
         side=side,
         type=OrderType.LIMIT,
-        time_in_force=TimeInForce.GTC,
+        time_in_force=time_in_force,
         take_profit=TakeProfitRequest(limit_price=take_profit_price),
     )
 
@@ -64,11 +66,12 @@ def create_stop_order(
     qty: int,
     side: OrderSide,
     stop_loss_price: float,
+    time_in_force: TimeInForce=TimeInForce.GTC
 ) -> StopOrderRequest:
     return StopOrderRequest(
         symbol=symbol,
         qty=qty,
         side=side,
-        time_in_force=TimeInForce.GTC,
+        time_in_force=time_in_force,
         stop_price=stop_loss_price,
     )
