@@ -8,7 +8,10 @@ from alpaca.trading.enums import PositionIntent
 from alpaca.trading.stream import TradingStream
 from dotenv import load_dotenv
 
-from trading_analytics.processes.log_executions import inserting_entry_orders, inserting_closing_orders
+from trading_analytics.processes.log_executions import (
+    inserting_closing_executions,
+    inserting_entry_executions,
+)
 from trading_order_entries.context import TradingContext
 from trading_order_entries.trading.orders.main import handle_exit_orders
 
@@ -72,7 +75,9 @@ async def start_stream(ctx: TradingContext) -> None:
             print(f"   Stop Price: ${order.stop_price}")
 
         if data.event == "fill":
+            lock = order_locks.setdefault(order.id, asyncio.Lock())
             if order.filled_avg_price:
+                print("Position opened!")
                 print(f"   Filled Price: ${order.filled_avg_price}")
 
             if order.position_intent in [
@@ -80,12 +85,10 @@ async def start_stream(ctx: TradingContext) -> None:
                 PositionIntent.SELL_TO_OPEN,
             ]:
                 pending = ctx.pending_orders[order.id]
-                lock = order_locks.setdefault(order.id, asyncio.Lock())
-                print("Position opened!")
 
                 async with lock:
-                    print("Logging executions...")
-                    trade_id = inserting_entry_orders(ctx, order)
+                    print("Logging entry executions...")
+                    trade_id = inserting_entry_executions(ctx, order)
 
                 print("Creating exit orders...")
                 handle_exit_orders(
@@ -101,8 +104,10 @@ async def start_stream(ctx: TradingContext) -> None:
 
                 del ctx.pending_orders[order.id]
 
-            else: # it's buy or sell to close:
-
+            else:  # it's buy or sell to close:
+                async with lock:
+                    print("Logging exit executions...")
+                    trade_id = inserting_closing_executions(ctx, order)
 
         print()  # Add blank line after update
 

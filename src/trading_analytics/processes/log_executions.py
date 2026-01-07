@@ -37,7 +37,7 @@ def handle_trade_id(db_executions: pl.DataFrame, execution: Order) -> int:
     return trade_id
 
 
-def handle_inserting_stop_orders(
+def inserting_stop_orders(
     ctx: TradingContext, stop_order: Order, trade_id: int
 ) -> None:
     df = order_to_df(stop_order)
@@ -58,7 +58,7 @@ def handle_inserting_stop_orders(
     print("Stop orders inserted in DB")
 
 
-def inserting_entry_orders(ctx: TradingContext, execution: Order) -> int:
+def inserting_entry_executions(ctx: TradingContext, execution: Order) -> int:
     df = order_to_df(execution)
     executions = ctx.db.get_executions()
     trade_id = handle_trade_id(executions, execution)
@@ -84,7 +84,7 @@ def inserting_entry_orders(ctx: TradingContext, execution: Order) -> int:
     return trade_id
 
 
-def inserting_closing_orders(ctx: TradingContext, execution: Order) -> None:
+def inserting_closing_executions(ctx: TradingContext, execution: Order) -> None:
     df = order_to_df(execution)
     executions = ctx.db.get_executions()
     open_positions = get_open_positions_symbol(executions)
