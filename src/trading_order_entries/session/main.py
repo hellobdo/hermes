@@ -14,7 +14,6 @@ def get_trading_context() -> TradingContext:
         client=client,
         stock_data=stock_data,
         option_data=option_data,
-        db=db,
         risk_pct=risk_pct,
         is_paper=is_paper,
         account_id=None,

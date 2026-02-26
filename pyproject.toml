@@ -18,13 +18,19 @@ dependencies = [
 ]
 
 [project.scripts]
-trading-order-entries = "trading_order_entries.main:cli"
+trader = "trading_order_entries.main:cli"
 
 [tool.uv]
 package = true
 
+[tool.vulture]
+min_confidence = 80
+paths = ["src"]
+
 [dependency-groups]
 dev = [
     "coverage>=7.13.0",
+    "pre-commit>=4.5.1",
     "pytest>=9.0.2",
+    "vulture>=2.14",
 ]
